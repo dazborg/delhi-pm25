@@ -12,7 +12,7 @@ import { MONTHS } from "@/lib/utils/constants";
 export default function HomePage() {
   const {
     dashboardState,
-    toggleSource,
+    setSourceLevel,
     resetAll,
     setActiveMonth,
     toggleState,
@@ -37,7 +37,7 @@ export default function HomePage() {
             Interactive Data Explorer
           </h2>
           <p className="mt-2 text-slate-600 max-w-2xl">
-            Select a time period and toggle pollution sources on/off to see how
+            Select a time period and adjust pollution source levels to see how
             they affect PM2.5 levels and health outcomes in real time.
           </p>
         </div>
@@ -64,20 +64,41 @@ export default function HomePage() {
                 <span className="text-sm font-normal text-slate-400">µg/m³</span>
               </p>
             </div>
-            {dashboardState.effectivePM25 < dashboardState.baselinePM25 && (
+            {dashboardState.effectivePM25 !== dashboardState.baselinePM25 && (
               <>
                 <div className="text-slate-600">→</div>
                 <div className="text-center">
-                  <p className="text-sm text-emerald-400">After Intervention</p>
-                  <p className="text-xl font-bold tabular-nums text-emerald-400">
+                  <p className={`text-sm ${
+                    dashboardState.effectivePM25 < dashboardState.baselinePM25
+                      ? "text-emerald-400"
+                      : "text-red-400"
+                  }`}>
+                    After Scenario
+                  </p>
+                  <p className={`text-xl font-bold tabular-nums ${
+                    dashboardState.effectivePM25 < dashboardState.baselinePM25
+                      ? "text-emerald-400"
+                      : "text-red-400"
+                  }`}>
                     {dashboardState.effectivePM25}{" "}
                     <span className="text-sm font-normal">µg/m³</span>
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-emerald-400">Reduction</p>
-                  <p className="text-xl font-bold tabular-nums text-emerald-400">
-                    -{dashboardState.healthDelta.pm25Reduction}{" "}
+                  <p className={`text-sm ${
+                    dashboardState.effectivePM25 < dashboardState.baselinePM25
+                      ? "text-emerald-400"
+                      : "text-red-400"
+                  }`}>
+                    {dashboardState.effectivePM25 < dashboardState.baselinePM25 ? "Reduction" : "Increase"}
+                  </p>
+                  <p className={`text-xl font-bold tabular-nums ${
+                    dashboardState.effectivePM25 < dashboardState.baselinePM25
+                      ? "text-emerald-400"
+                      : "text-red-400"
+                  }`}>
+                    {dashboardState.effectivePM25 < dashboardState.baselinePM25 ? "−" : "+"}
+                    {Math.abs(Math.round((dashboardState.baselinePM25 - dashboardState.effectivePM25) * 10) / 10)}{" "}
                     <span className="text-sm font-normal">µg/m³</span>
                   </p>
                 </div>
@@ -113,7 +134,7 @@ export default function HomePage() {
             <SourceTogglePanel
               activeMonth={activeMonth}
               toggleState={toggleState}
-              onToggle={toggleSource}
+              onSourceChange={setSourceLevel}
               onReset={resetAll}
             />
           </div>

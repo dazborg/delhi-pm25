@@ -17,27 +17,37 @@ export function HealthImpactPanel({
   baselinePM25,
   effectivePM25,
 }: HealthImpactPanelProps) {
-  const hasIntervention = effectivePM25 < baselinePM25;
+  const hasChange = Math.abs(effectivePM25 - baselinePM25) > 0.05;
+  const isReduction = effectivePM25 < baselinePM25;
+  const isIncrease = effectivePM25 > baselinePM25;
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-lg font-semibold text-slate-800">Health Impact</h3>
-        {hasIntervention && (
-          <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-medium px-2.5 py-1 rounded-full">
+        {hasChange && (
+          <span className={`inline-flex items-center gap-1 ${
+            isReduction
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-red-50 text-red-700"
+          } text-xs font-medium px-2.5 py-1 rounded-full`}>
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              {isReduction ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              )}
             </svg>
-            Intervention modelled
+            {isReduction ? "Reduction modelled" : "Increase modelled"}
           </span>
         )}
       </div>
       <p className="text-sm text-slate-500 mb-5">
         Estimated annual health burden at{" "}
         <span className="font-medium text-slate-700">{effectivePM25} µg/m³</span>
-        {hasIntervention && (
-          <span className="text-emerald-600">
-            {" "}(reduced from {baselinePM25})
+        {hasChange && (
+          <span className={isReduction ? "text-emerald-600" : "text-red-600"}>
+            {" "}({isReduction ? "reduced" : "increased"} from {baselinePM25})
           </span>
         )}
       </p>
@@ -46,8 +56,9 @@ export function HealthImpactPanel({
         <HealthCard
           label="Premature Deaths"
           value={healthImpact.allCauseMortality.attributableDeaths}
-          delta={hasIntervention ? healthDelta.prematureDeathsAvoided : 0}
+          delta={hasChange ? healthDelta.prematureDeathsAvoided : 0}
           deltaLabel="lives saved"
+          negativeDeltaLabel="additional deaths"
           format="number"
           icon="💀"
           severity="critical"
@@ -55,8 +66,9 @@ export function HealthImpactPanel({
         <HealthCard
           label="Life Expectancy Lost"
           value={healthImpact.lifeExpectancyLoss}
-          delta={hasIntervention ? healthDelta.lifeExpectancyGainPerPerson : 0}
+          delta={hasChange ? healthDelta.lifeExpectancyGainPerPerson : 0}
           deltaLabel="years gained"
+          negativeDeltaLabel="additional years lost"
           format="years"
           icon="⏳"
           severity="high"
@@ -64,8 +76,9 @@ export function HealthImpactPanel({
         <HealthCard
           label="DALYs Lost"
           value={healthImpact.dalysLost}
-          delta={hasIntervention ? healthDelta.dalysAverted : 0}
+          delta={hasChange ? healthDelta.dalysAverted : 0}
           deltaLabel="DALYs averted"
+          negativeDeltaLabel="additional DALYs"
           format="compact"
           icon="📊"
           severity="high"
@@ -73,8 +86,9 @@ export function HealthImpactPanel({
         <HealthCard
           label="QALYs Lost"
           value={healthImpact.qalysLost}
-          delta={hasIntervention ? healthDelta.qalysGained : 0}
+          delta={hasChange ? healthDelta.qalysGained : 0}
           deltaLabel="QALYs gained"
+          negativeDeltaLabel="additional QALYs"
           format="compact"
           icon="💚"
           severity="moderate"
@@ -82,8 +96,9 @@ export function HealthImpactPanel({
         <HealthCard
           label="Cardiovascular Deaths"
           value={healthImpact.cardiovascularMortality.attributableDeaths}
-          delta={hasIntervention ? healthDelta.cardiovascularDeathsAvoided : 0}
+          delta={hasChange ? healthDelta.cardiovascularDeathsAvoided : 0}
           deltaLabel="lives saved"
+          negativeDeltaLabel="additional deaths"
           format="number"
           icon="❤️"
           severity="high"
@@ -91,8 +106,9 @@ export function HealthImpactPanel({
         <HealthCard
           label="Respiratory Deaths"
           value={healthImpact.respiratoryMortality.attributableDeaths}
-          delta={hasIntervention ? healthDelta.respiratoryDeathsAvoided : 0}
+          delta={hasChange ? healthDelta.respiratoryDeathsAvoided : 0}
           deltaLabel="lives saved"
+          negativeDeltaLabel="additional deaths"
           format="number"
           icon="🫁"
           severity="moderate"
@@ -122,6 +138,7 @@ function HealthCard({
   value,
   delta,
   deltaLabel,
+  negativeDeltaLabel,
   format,
   icon,
   severity,
@@ -130,6 +147,7 @@ function HealthCard({
   value: number;
   delta: number;
   deltaLabel: string;
+  negativeDeltaLabel: string;
   format: "number" | "compact" | "years";
   icon: string;
   severity: "critical" | "high" | "moderate";
@@ -160,12 +178,20 @@ function HealthCard({
             {unitLabel && <span className="text-sm font-normal text-slate-500 ml-1">{unitLabel}</span>}
           </p>
 
-          {delta > 0 && (
-            <div className="mt-1.5 inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs font-medium px-2 py-0.5 rounded-full">
+          {delta !== 0 && (
+            <div className={`mt-1.5 inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
+              delta > 0
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-red-100 text-red-700"
+            }`}>
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                {delta > 0 ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                )}
               </svg>
-              {formatFn(delta)} {deltaLabel}
+              {formatFn(Math.abs(delta))} {delta > 0 ? deltaLabel : negativeDeltaLabel}
             </div>
           )}
         </div>

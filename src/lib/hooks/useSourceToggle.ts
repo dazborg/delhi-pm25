@@ -11,27 +11,30 @@ import {
   calculateHealthDelta,
 } from "@/lib/calculations/health-engine";
 
-const ALL_SOURCES_ON: SourceToggleState = {
-  vehicles: true,
-  biomass: true,
-  industry: true,
-  dust: true,
-  secondary: true,
-  waste_other: true,
+const ALL_SOURCES_BASELINE: SourceToggleState = {
+  vehicles: 100,
+  biomass: 100,
+  industry: 100,
+  dust: 100,
+  secondary: 100,
+  waste_other: 100,
 };
 
 export function useSourceToggle() {
   const [activeMonth, setActiveMonth] = useState<"annual" | number>("annual");
   const [toggleState, setToggleState] = useState<SourceToggleState>({
-    ...ALL_SOURCES_ON,
+    ...ALL_SOURCES_BASELINE,
   });
 
-  const toggleSource = useCallback((sourceId: SourceId) => {
-    setToggleState((prev) => ({ ...prev, [sourceId]: !prev[sourceId] }));
+  const setSourceLevel = useCallback((sourceId: SourceId, level: number) => {
+    setToggleState((prev) => ({
+      ...prev,
+      [sourceId]: Math.max(0, Math.min(200, Math.round(level))),
+    }));
   }, []);
 
   const resetAll = useCallback(() => {
-    setToggleState({ ...ALL_SOURCES_ON });
+    setToggleState({ ...ALL_SOURCES_BASELINE });
   }, []);
 
   const dashboardState: DashboardState = useMemo(() => {
@@ -59,7 +62,7 @@ export function useSourceToggle() {
 
   return {
     dashboardState,
-    toggleSource,
+    setSourceLevel,
     resetAll,
     setActiveMonth,
     toggleState,

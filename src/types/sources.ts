@@ -26,4 +26,5 @@ export interface MonthlySourceProfile {
   sources: SourceApportionment[];
 }
 
-export type SourceToggleState = Record<SourceId, boolean>;
+/** Percentage scale factor per source: 100 = baseline, 0 = eliminated, 200 = doubled */
+export type SourceToggleState = Record<SourceId, number>;

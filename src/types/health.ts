@@ -43,7 +43,7 @@ export interface HealthImpact {
 }
 
 export interface HealthDelta {
-  pm25Reduction: number;
+  pm25Change: number;
   previousPM25: number;
   newPM25: number;
   prematureDeathsAvoided: number;
@@ -57,7 +57,7 @@ export interface HealthDelta {
 
 export interface DashboardState {
   activeMonth: "annual" | number;
-  sourceToggleState: Record<string, boolean>;
+  sourceToggleState: Record<string, number>;
   effectivePM25: number;
   baselinePM25: number;
   healthImpact: HealthImpact;

@@ -24,7 +24,7 @@ import { MONTHS_SHORT } from "@/lib/utils/constants";
 export default function ExplorePage() {
   const {
     dashboardState,
-    toggleSource,
+    setSourceLevel,
     resetAll,
     setActiveMonth,
     toggleState,
@@ -38,8 +38,8 @@ export default function ExplorePage() {
       name: MONTHS_SHORT[m.monthIndex],
     };
     sources.forEach((s) => {
-      const isEnabled = toggleState[s.sourceId];
-      entry[s.sourceId] = isEnabled ? s.absolutePM25 : 0;
+      const scaleFactor = (toggleState[s.sourceId] ?? 100) / 100;
+      entry[s.sourceId] = s.absolutePM25 * scaleFactor;
     });
     return entry;
   });
@@ -85,7 +85,7 @@ export default function ExplorePage() {
           <SourceTogglePanel
             activeMonth={activeMonth}
             toggleState={toggleState}
-            onToggle={toggleSource}
+            onSourceChange={setSourceLevel}
             onReset={resetAll}
           />
         </div>
@@ -136,7 +136,7 @@ export default function ExplorePage() {
                       stackId="1"
                       stroke={source.color}
                       fill={source.color}
-                      fillOpacity={toggleState[source.id] ? 0.7 : 0}
+                      fillOpacity={toggleState[source.id] > 0 ? 0.7 : 0}
                     />
                   ))}
                 </AreaChart>

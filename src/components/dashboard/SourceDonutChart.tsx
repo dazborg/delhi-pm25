@@ -15,13 +15,14 @@ export function SourceDonutChart({ activeMonth, toggleState, effectivePM25 }: So
 
   const data = sources.map((s) => {
     const sourceMeta = POLLUTION_SOURCES.find((ps) => ps.id === s.sourceId)!;
-    const isEnabled = toggleState[s.sourceId];
+    const scaleFactor = toggleState[s.sourceId] ?? 100;
+    const scaledValue = s.percentage * (scaleFactor / 100);
     return {
       name: sourceMeta.label,
-      value: isEnabled ? s.percentage : 0,
+      value: scaledValue,
       originalValue: s.percentage,
       color: sourceMeta.color,
-      enabled: isEnabled,
+      scaleFactor,
       sourceId: s.sourceId,
     };
   });
@@ -79,14 +80,18 @@ export function SourceDonutChart({ activeMonth, toggleState, effectivePM25 }: So
         {data.map((d) => (
           <div
             key={d.sourceId}
-            className={`flex items-center gap-2 text-xs ${d.enabled ? "text-slate-600" : "text-slate-400 line-through"}`}
+            className={`flex items-center gap-2 text-xs ${d.value > 0 ? "text-slate-600" : "text-slate-400 line-through"}`}
           >
             <span
               className="w-3 h-3 rounded-full flex-shrink-0"
-              style={{ backgroundColor: d.enabled ? d.color : "#D1D5DB" }}
+              style={{ backgroundColor: d.value > 0 ? d.color : "#D1D5DB" }}
             />
             <span className="truncate">{d.name}</span>
-            <span className="ml-auto font-medium">{d.originalValue.toFixed(0)}%</span>
+            <span className="ml-auto font-medium">
+              {d.scaleFactor === 100
+                ? `${d.originalValue.toFixed(0)}%`
+                : `${d.value.toFixed(0)}%`}
+            </span>
           </div>
         ))}
       </div>

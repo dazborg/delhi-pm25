@@ -20,24 +20,23 @@ import type { SourceApportionment } from "@/types/sources";
 import type { SourceToggleState } from "@/types/sources";
 
 /**
- * Calculate the effective PM2.5 level after toggling sources.
+ * Calculate the effective PM2.5 level after scaling sources.
  *
- * When a source is toggled off, its contribution is removed.
- * E.g., if vehicles (25%) are toggled off:
- *   effectivePM25 = basePM25 × (1 - 0.25) = basePM25 × 0.75
+ * Each source contributes: (source.percentage / 100) * (scaleFactor / 100) of basePM25.
+ * At scale 100 (baseline), contribution is unchanged.
+ * At scale 0, contribution is removed. At scale 200, contribution is doubled.
  */
 export function calculateEffectivePM25(
   basePM25: number,
   sources: SourceApportionment[],
   toggleState: SourceToggleState
 ): number {
-  let removedFraction = 0;
+  let scaledFraction = 0;
   for (const source of sources) {
-    if (!toggleState[source.sourceId]) {
-      removedFraction += source.percentage / 100;
-    }
+    const scaleFactor = toggleState[source.sourceId] ?? 100;
+    scaledFraction += (source.percentage / 100) * (scaleFactor / 100);
   }
-  return Math.max(0, basePM25 * (1 - removedFraction));
+  return Math.max(0, Math.round(basePM25 * scaledFraction * 10) / 10);
 }
 
 /**
@@ -120,7 +119,7 @@ export function calculateHealthDelta(
     Math.round((baselineImpact.lifeExpectancyLoss - scenarioImpact.lifeExpectancyLoss) * 10) / 10;
 
   return {
-    pm25Reduction:
+    pm25Change:
       Math.round((baselineImpact.pm25Level - scenarioImpact.pm25Level) * 10) / 10,
     previousPM25: baselineImpact.pm25Level,
     newPM25: scenarioImpact.pm25Level,
