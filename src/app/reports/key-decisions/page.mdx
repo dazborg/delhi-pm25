@@ -1,0 +1,210 @@
+export const metadata = {
+  title: "Key Decisions & Assumptions",
+};
+
+# Key Decisions & Assumptions
+
+This document records every significant decision made during the development of this analysis. Where research is contested or multiple valid approaches exist, we explain the options considered, the decision taken, and the implications. This transparency is essential for policymakers to assess the robustness of our conclusions.
+
+---
+
+## Decision 1: PM2.5 Data Source Selection
+
+**Question:** Which data source should we use for Delhi's PM2.5 levels?
+
+**Options considered:**
+- **CPCB CAAQMS data analysed by CSE** — 34-39 continuous monitoring stations across Delhi, annual analysis published
+- **IQAir crowd-sourced and reference data** — global coverage, slightly different methodology
+- **SAFAR (IITM) data** — Government forecasting system, fewer stations
+- **Satellite-derived estimates (e.g., ACAG/Dalhousie)** — complete spatial coverage, indirect measurement
+
+**Decision:** We use **CPCB/CSE data** (annual average 104.7 µg/m³ for 2024).
+
+**Rationale:** CPCB operates the official regulatory monitoring network in India. CSE's analysis of this data is the most widely cited in Indian policy contexts. IQAir reports a slightly lower figure (91.6-108.3 µg/m³ depending on geographical boundary) because it uses a different station network and averaging methodology. The CPCB/CSE figure represents the official data that policymakers are most likely to reference.
+
+**Implication:** Choosing a different data source would shift the annual average by approximately ±10-15%, which would proportionally affect all health estimates.
+
+---
+
+## Decision 2: Source Apportionment — Consensus Approach
+
+**Question:** Source apportionment studies for Delhi produce widely varying results. How do we select representative values?
+
+**Options considered:**
+- Use a single study (e.g., IIT Kanpur as the government-commissioned study)
+- Use the most recent study
+- Synthesise across all major studies to derive midpoint estimates
+
+**Decision:** We use a **synthesis/midpoint approach** drawing on all major studies.
+
+**Rationale:** No single study is definitive. Each uses different methods (CMB, PMF, dispersion modelling, emission inventories), different time periods, and different spatial boundaries. A synthesis approach captures the central tendency while acknowledging uncertainty through reported ranges.
+
+**Specific values adopted:**
+
+| Source | Adopted % | Range in Literature | Key Driver of Uncertainty |
+|--------|-----------|--------------------|-|
+| Vehicles | 25% | 16-39% | Definition of "transport" (exhaust only vs. road dust resuspension) |
+| Biomass/Crop burning | 20% | 14-30% | Seasonal variation; regional vs. local contributions |
+| Dust | 18% | 13-21% | Overlap with vehicle-resuspended road dust |
+| Industry | 15% | 6-35% | Geographical boundary (Delhi NCT vs. NCR) |
+| Secondary particles | 12% | 21-30% | Methodological — some studies lump with primary sources |
+| Waste/Other | 10% | 8-10% | Limited data; likely underestimated |
+
+**Contentious point:** The vehicle contribution ranges from 16% to 39% across studies. The lower estimates typically count only tailpipe exhaust, while higher estimates include brake/tyre wear and road dust resuspension triggered by traffic. Our adopted 25% is a conservative midpoint. Some researchers argue it should be higher when all traffic-related dust is included.
+
+**Contentious point:** Industry's wide range (6-35%) is primarily a boundary issue. Studies looking only at Delhi NCT find lower industrial contributions because heavy industry is concentrated in NCR satellite cities (Faridabad, Ghaziabad, Noida). However, emissions from these areas significantly affect Delhi's air quality. Our 15% reflects a Delhi-centric view acknowledging transboundary industrial pollution.
+
+---
+
+## Decision 3: Seasonal Source Adjustment Factors
+
+**Question:** Source contributions vary dramatically by season. How do we model this?
+
+**Decision:** We apply multiplicative seasonal adjustment factors to the annual percentages, then re-normalise to 100% for each month.
+
+**Rationale:** Full monthly source apportionment data is not available from any single study. We derived seasonal factors by cross-referencing:
+- IIT Kanpur's winter vs. summer analyses
+- TERI-ARAI's seasonal dispersion model outputs
+- SAFAR seasonal bulletins
+- Observational patterns from CPCB monitoring
+
+**Key adjustments:**
+- **November:** Biomass factor = 2.2× (crop burning peak). This is the single most certain seasonal adjustment — stubble burning from Punjab and Haryana is well-documented and dramatic.
+- **August:** Dust factor = 0.4× (monsoon rain suppresses dust). Secondary factor = 0.5× (rain washes out secondary aerosols). These are well-established meteorological effects.
+- **May:** Dust factor = 1.8× (pre-monsoon dust storms from Rajasthan). Supported by satellite and ground observations.
+
+**Limitation:** The factors are approximate. Real seasonal variation is continuous, not stepwise by month. Day-to-day variation within a month can exceed the inter-month variation.
+
+---
+
+## Decision 4: Health CRF Selection — Log-Linear Model
+
+**Question:** Which concentration-response function (CRF) model should we use?
+
+**Options considered:**
+- **Log-linear model** with WHO/Chen & Hoek RR estimates (standard approach)
+- **Integrated Exposure-Response (IER)** used in GBD (accounts for curve flattening at high concentrations)
+- **GEMM** (Burnett et al. 2018) — most comprehensive ambient-only model
+
+**Decision:** We use the **log-linear model** with WHO meta-analysis RR estimates.
+
+**Rationale:** The log-linear model is the most transparent, reproducible, and widely understood approach. It uses straightforward mathematics (RR = exp(β × ΔC)) that can be independently verified. The WHO meta-analysis provides the most authoritative pooled RR estimates.
+
+**Critical limitation:** The log-linear model does **not** account for potential flattening of the concentration-response curve at very high concentrations. At Delhi's November average of 240 µg/m³, the model produces an all-cause mortality RR of approximately 5.7, which implies about 83% of baseline deaths are attributable to PM2.5. This is likely an overestimate for that specific month.
+
+The IER model (used in GBD) would produce substantially lower estimates at these concentrations because it incorporates a flattening effect derived from smoking studies. The GEMM falls between the two.
+
+**Our approach to this limitation:** We present annual-average estimates as the primary outputs (where the log-linear model is most defensible) and include caveats when displaying monthly estimates for high-concentration months.
+
+---
+
+## Decision 5: All-Cause Mortality RR = 1.095
+
+**Question:** What relative risk should we use for all-cause mortality?
+
+**Evidence range:** Meta-analyses report pooled RR per 10 µg/m³ ranging from 1.04 to 1.14.
+
+**Decision:** RR = 1.095 per 10 µg/m³ (95% CI: 1.066-1.126).
+
+**Source:** WHO systematic review update (2024), building on Chen & Hoek (2020). This is a pooled estimate from 20+ cohort studies predominantly in North America and Europe.
+
+**Contentious point:** A 2024 Lancet Planetary Health study of India specifically found an 8.6% increase in annual mortality per 10 µg/m³ — very close to our adopted 9.5%. However, a recent difference-in-differences study using India-specific data suggested even higher effects. We chose the WHO estimate as it represents the broadest evidence base and is the most widely accepted.
+
+---
+
+## Decision 6: Life Expectancy — Calibrated AQLI Coefficient
+
+**Question:** How do we convert PM2.5 to life expectancy impact?
+
+**Options considered:**
+- Raw Ebenstein et al. (2017) coefficient: 0.098 years per µg/m³ above WHO guideline
+- GBD-derived life table approach (complex, requires age-specific mortality data)
+- Calibrated AQLI coefficient matching their published Delhi figure
+
+**Decision:** Calibrated coefficient of **0.0822 years per µg/m³**.
+
+**Rationale:** The raw coefficient (0.098) produces 9.77 years of life expectancy loss for Delhi at 104.7 µg/m³, but AQLI's published figure is 8.2 years. The difference is because AQLI uses an age-stratified population-weighted model that the simple linear formula does not capture. We calibrate our coefficient to match the authoritative published figure: 8.2 / (104.7 - 5) = 0.0822.
+
+**Implication:** This is a deliberate simplification. The linear model will be most accurate near Delhi's annual average and less accurate at extreme values. At August's 42 µg/m³, we estimate 3.0 years lost; at November's 240 µg/m³, we estimate 19.3 years. The November figure is illustrative of peak exposure but should not be interpreted as the life expectancy impact of permanent exposure at that level.
+
+---
+
+## Decision 7: DALY Calculation — Simplified Approach
+
+**Question:** How do we estimate DALYs?
+
+**Decision:** DALYs = (Attributable deaths × 12 years YLL) / 0.95
+
+**Rationale:** A full DALY calculation requires age-specific mortality data, cause-specific disability weights, and detailed life tables. For this policy-focused tool, we use a simplified approach:
+- **Average YLL per death = 12 years** (from GBD 2019 India PM2.5 estimates)
+- **YLD fraction = 5%** of total DALYs (GBD estimates show ~95% of PM2.5 DALYs come from mortality)
+- **QALY conversion = DALYs × 0.95** (Sassi 2006 approximation)
+
+This produces order-of-magnitude estimates suitable for policy comparison, not precise clinical calculations.
+
+---
+
+## Decision 8: Population Parameters
+
+**Question:** What population and baseline mortality should we use?
+
+**Decision:**
+- Population: 22.3 million (Delhi NCT, 2025 projection from National Commission on Population)
+- Baseline mortality rate: 5.5 per 1,000 per year (Sample Registration System, crude death rate)
+- Life expectancy at birth: 70.2 years (India average, SRS 2022)
+
+**Alternative considered:** Delhi metro area population (~34.7 million) which includes NCR. We chose the narrower NCT figure because our PM2.5 data is from CPCB stations within Delhi's borders.
+
+**Contentious point:** Delhi-specific mortality rates may differ from the India average due to better healthcare access (urban area) but also higher pollution exposure. Age-standardised rates would be more appropriate but require demographic data not readily available for Delhi NCT alone.
+
+---
+
+## Decision 9: Counterfactual Concentration
+
+**Question:** What is the "safe" baseline PM2.5 level against which we calculate health impacts?
+
+**Options:**
+- **WHO 2021 guideline: 5 µg/m³** (current recommendation)
+- **WHO 2005 guideline: 10 µg/m³** (previous, less stringent)
+- **India NAAQS: 40 µg/m³** (national standard)
+- **Theoretical minimum risk exposure level (TMREL): 2.4 µg/m³** (used in GEMM)
+
+**Decision:** WHO 2021 guideline of **5 µg/m³**.
+
+**Rationale:** The 2021 WHO guidelines represent the latest scientific consensus on the threshold for health effects. Using India's NAAQS (40 µg/m³) would dramatically undercount health impacts because substantial harm occurs below that level. The TMREL (2.4 µg/m³) is appropriate for global modelling but is not a policy target.
+
+**Implication:** If India's NAAQS (40 µg/m³) were used as the counterfactual, our health impact estimates would be approximately 60% lower. This illustrates why guideline selection is one of the most consequential decisions in health impact assessment.
+
+---
+
+## Decision 10: Source Toggle — Linear Removal Assumption
+
+**Question:** When a user toggles off a pollution source, how do we calculate the new PM2.5?
+
+**Decision:** Linear removal: new PM2.5 = baseline × (1 - source fraction).
+
+**Limitation:** This assumes sources contribute independently. In reality:
+- Removing vehicle emissions would also reduce secondary particle formation (some secondary aerosols come from vehicle NOx/VOC emissions)
+- Reducing one source might shift atmospheric chemistry affecting other sources
+- Transboundary pollution would not be affected by local source control
+
+**Rationale:** A linear model is transparent and intuitive for policymakers. Non-linear atmospheric chemistry modelling (e.g., CMAQ or WRF-Chem) would be needed for accurate source removal scenarios, but such models are complex, require extensive input data, and are beyond the scope of this tool.
+
+The linear assumption likely **underestimates** the benefit of removing vehicle emissions (because it ignores co-benefits from reduced secondary aerosol formation) and **overestimates** the benefit of removing sources with significant transboundary components.
+
+---
+
+## Summary of Key Uncertainties
+
+| Parameter | Confidence Level | Key Source of Uncertainty |
+|-----------|-----------------|--------------------------|
+| Annual PM2.5 (104.7 µg/m³) | High | Station coverage, averaging methodology |
+| Monthly PM2.5 pattern | Medium-High | Year-to-year variation can be substantial |
+| Source apportionment (%) | Medium | Methodological heterogeneity across studies |
+| Seasonal source variation | Medium-Low | Limited monthly source data available |
+| All-cause mortality RR | High | Large, well-powered meta-analyses |
+| Health estimates at annual avg | Medium | CRF extrapolation from lower-exposure studies |
+| Health estimates at peak months | Low-Medium | Log-linear likely overestimates at 200+ µg/m³ |
+| Life expectancy (8.2 years) | Medium-High | AQLI published figure, calibrated model |
+| DALY/QALY estimates | Medium | Simplified calculation method |
+| Source toggle scenarios | Low-Medium | Linear removal assumption, ignores interactions |

@@ -1,0 +1,180 @@
+export const metadata = {
+  title: "Methodology",
+};
+
+# Methodology
+
+This page describes how the Delhi Air Quality Analysis was constructed, from data collection through health impact modelling. The aim is to provide sufficient detail for the analysis to be reproduced, scrutinised, and improved upon.
+
+---
+
+## Overview
+
+This analysis combines three bodies of evidence:
+
+1. **PM2.5 monitoring data** from the Central Pollution Control Board (CPCB) continuous ambient air quality monitoring stations (CAAQMS) in Delhi, analysed by the Centre for Science and Environment (CSE)
+2. **Source apportionment research** synthesised from multiple receptor modelling and dispersion modelling studies conducted in Delhi-NCR
+3. **Health impact evidence** from WHO-endorsed meta-analyses of epidemiological cohort studies, applied through standard concentration-response functions
+
+These are combined in an interactive model that allows policymakers to explore how different pollution sources affect health outcomes.
+
+---
+
+## Data Collection
+
+### PM2.5 Concentrations
+
+Annual and monthly PM2.5 concentrations are drawn from CPCB CAAQMS data as analysed by CSE. This network comprises 34-39 continuous monitoring stations distributed across Delhi, recording PM2.5 concentrations at hourly intervals.
+
+- **Annual average (2024):** 104.7 µg/m³
+- **Monthly values:** Derived from long-term seasonal analysis (2007-2024) supplemented by recent CPCB reports
+- **Peak month:** November (~240 µg/m³) driven by crop residue burning and meteorological inversions
+- **Lowest month:** August (~42 µg/m³) due to monsoon rainfall washout
+
+These values represent population-weighted averages across the monitoring network. Individual stations show substantial spatial variation (typically ±30% from the city mean).
+
+### Source Apportionment
+
+No single source apportionment study is considered definitive for Delhi. We therefore conducted a systematic review (see [Source Apportionment Review](/reports/source-apportionment)) and derived consensus estimates as midpoints across six major studies/reports:
+
+- IIT Kanpur (2015) — Chemical Mass Balance and dispersion modelling
+- TERI-ARAI (2018) — Emission inventory and dispersion modelling
+- Sharma et al. (2016) — Positive Matrix Factorisation
+- Pant et al. (2015) — Receptor modelling
+- Guttikunda & Calori (2013) — Emission inventory and SIM-air
+- CEEW synthesis — Multi-study analysis
+
+Seasonal adjustment factors are applied multiplicatively and re-normalised to 100% for each month. See [Key Decisions](/reports/key-decisions) for full documentation of the adjustment factors and their derivation.
+
+### Health Parameters
+
+Concentration-response functions were selected through a systematic review of the epidemiological literature (see [Health Effects Review](/reports/health-effects)). We prioritised:
+
+1. WHO-endorsed pooled estimates from systematic reviews
+2. The most comprehensive and recent meta-analyses
+3. Studies with the broadest geographical representation
+
+Population and baseline health parameters use official Indian government statistics (National Commission on Population projections, Sample Registration System crude death rates).
+
+---
+
+## Health Impact Model
+
+### Mathematical Framework
+
+The health impact model uses the standard **Population Attributable Fraction (PAF)** approach, which is the foundation of the Global Burden of Disease methodology:
+
+**Step 1: Relative Risk**
+
+For each health endpoint, the relative risk at a given PM2.5 concentration is calculated using a log-linear concentration-response function:
+
+> RR(C) = exp(β × (C - C₀))
+
+Where:
+- β = ln(RR₁₀) / 10 is the log-linear slope coefficient
+- C = current PM2.5 concentration (µg/m³)
+- C₀ = counterfactual concentration (WHO guideline = 5 µg/m³)
+- RR₁₀ = relative risk per 10 µg/m³ increase (from meta-analyses)
+
+**Step 2: Attributable Fraction**
+
+The population attributable fraction represents the proportion of deaths that can be attributed to PM2.5 exposure:
+
+> AF = (RR - 1) / RR
+
+**Step 3: Attributable Deaths**
+
+> Attributable Deaths = Population × Baseline Mortality Rate × AF
+
+**Step 4: Life Expectancy**
+
+Using the AQLI linear approximation (calibrated):
+
+> Life Years Lost = 0.0822 × (C - 5)
+
+**Step 5: DALYs**
+
+> DALYs = Attributable Deaths × 12 (average YLL) / 0.95 (to include YLD)
+
+**Step 6: QALYs**
+
+> QALYs Lost ≈ DALYs × 0.95
+
+### Source Toggle Mechanism
+
+When a user disables a pollution source, the effective PM2.5 is recalculated:
+
+> Effective PM2.5 = Baseline PM2.5 × (1 - sum of disabled source fractions)
+
+The health model then recalculates all endpoints at the new concentration. The difference between the baseline and scenario health impacts is displayed as the "health delta" — showing lives saved, years gained, and DALYs averted.
+
+This uses a **linear removal assumption**: each source contributes independently. See [Key Decisions](/reports/key-decisions) for the implications and limitations of this assumption.
+
+### CRF Parameters Used
+
+| Endpoint | RR per 10 µg/m³ | 95% CI | Source |
+|----------|-----------------|--------|--------|
+| All-cause mortality | 1.095 | 1.066-1.126 | WHO 2024; Chen & Hoek 2020 |
+| Cardiovascular mortality | 1.10 | 1.05-1.15 | WHO 2013; Pope et al. 2020 |
+| Respiratory mortality | 1.31 | 1.15-1.49 | WHO 2013; LMICs meta-analysis 2023 |
+| Lung cancer | 1.12 | 1.03-1.21 | Hamra et al. 2014 |
+
+### Population Parameters
+
+| Parameter | Value | Source |
+|-----------|-------|--------|
+| Delhi NCT population (2025) | 22,300,000 | National Commission on Population |
+| Crude death rate | 5.5 per 1,000/year | Sample Registration System |
+| Baseline deaths (annual) | 122,650 | Computed |
+| Life expectancy at birth | 70.2 years | SRS 2022 |
+
+---
+
+## Validation
+
+### Internal Consistency
+
+Our model produces the following headline estimates at Delhi's annual average (104.7 µg/m³):
+
+- **All-cause attributable deaths:** ~73,000
+- **Life expectancy lost:** 8.2 years (matches AQLI published figure)
+- **Cardiovascular deaths:** ~62,000
+- **Respiratory deaths:** ~95,000
+
+Note: Cause-specific estimates (cardiovascular + respiratory) can exceed the all-cause estimate because they use different CRFs. The all-cause CRF captures the net effect across all causes, while cause-specific CRFs isolate individual pathways. The all-cause figure should be used as the primary mortality estimate.
+
+### External Benchmarks
+
+- **GBD 2019:** Estimated ~980,000 ambient PM2.5 deaths for all of India. Delhi has ~1.6% of India's population but ~2.5× the average exposure, suggesting a Delhi contribution of perhaps 50,000-80,000 deaths. Our estimate of ~73,000 falls within this range.
+- **AQLI:** Reports 8.2 years of life expectancy lost for Delhi. Our model reproduces this exactly (by calibration).
+- **Lancet 2024 India study:** Found 8.6% higher mortality per 10 µg/m³, very close to our 9.5%.
+
+---
+
+## Limitations
+
+1. **CRF extrapolation:** Our concentration-response functions are derived primarily from studies in populations exposed to 5-35 µg/m³. Delhi's levels (42-240 µg/m³) require extrapolation well beyond the observed data range.
+
+2. **Log-linear assumption:** The log-linear model may overestimate health impacts at extreme concentrations where the true curve may flatten. Alternative models (IER, GEMM) account for this but are more complex and less transparent.
+
+3. **Linear source removal:** Toggling off a source assumes linear, independent contributions. Atmospheric chemistry is non-linear — removing one source can affect formation of secondary pollutants.
+
+4. **Temporal averaging:** Monthly averages mask substantial day-to-day variation. Health impacts of peak episodes (e.g., Diwali week) are not captured.
+
+5. **Spatial averaging:** City-wide averages mask significant spatial variation. Areas near industrial zones or highways experience higher concentrations.
+
+6. **Population homogeneity:** We use a single baseline mortality rate and population figure. In reality, age structure, pre-existing health conditions, and socioeconomic factors create substantial heterogeneity in vulnerability.
+
+7. **Single-pollutant model:** We model PM2.5 in isolation. In reality, PM2.5 is correlated with other pollutants (NO₂, O₃, SO₂) and the CRFs may partially capture multi-pollutant effects.
+
+---
+
+## Reproducibility
+
+All data, calculations, and assumptions are documented across these reports:
+
+- [Source Apportionment Review](/reports/source-apportionment) — Evidence base for source percentages
+- [Health Effects Review](/reports/health-effects) — Evidence base for CRF selection
+- [Key Decisions](/reports/key-decisions) — All modelling assumptions and contentious choices
+
+The calculation engine is implemented as pure functions with no external dependencies, making it straightforward to audit, test, and modify. All source code is available for review.
